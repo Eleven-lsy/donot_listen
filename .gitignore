@@ -1,0 +1,38 @@
+# 环境变量文件
+.env
+.env.local
+.env.*.local
+
+# Maven
+dl/target/
+dl/*.jar
+dl/*.war
+
+# Node
+qianduan/node_modules/
+qianduan/dist/
+qianduan/.vite/
+
+# IDE
+.idea/
+*.iml
+.vscode/
+
+# Logs
+logs/
+*.log
+*.log.*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docker
+data/
+*.db
+
+# SSL 证书
+nginx/ssl/
+
+# 数据库初始化
+init.sql.local

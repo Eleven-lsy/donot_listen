@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.donotlisten.record.mapper.LearningRecordMapper">
+
+    <resultMap id="LearningRecordDetailResultMap" type="com.donotlisten.record.dto.LearningRecordDetailResponse">
+        <id property="id" column="id"/>
+        <result property="listeningId" column="listening_id"/>
+        <result property="listeningTitle" column="title"/>
+        <result property="duration" column="duration"/>
+        <result property="progress" column="progress"/>
+        <result property="understood" column="understood_count"/>
+        <result property="familiar" column="familiar_count"/>
+        <result property="unfamiliar" column="unfamiliar_count"/>
+        <result property="lastPractice" column="updated_at"/>
+    </resultMap>
+
+    <select id="findByUserIdPageable" resultMap="LearningRecordDetailResultMap">
+        SELECT
+            ulp.id,
+            ulp.listening_id,
+            lm.title,
+            ulp.duration,
+            ulp.progress,
+            ulp.understood_count,
+            ulp.familiar_count,
+            ulp.unfamiliar_count,
+            ulp.updated_at
+        FROM user_listening_progress ulp
+        INNER JOIN listening_materials lm ON ulp.listening_id = lm.id
+        WHERE ulp.user_id = #{userId}
+        ORDER BY ulp.updated_at DESC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <select id="countByUserId" resultType="long">
+        SELECT COUNT(*)
+        FROM user_listening_progress
+        WHERE user_id = #{userId}
+    </select>
+
+    <select id="findStatisticsByUserId" resultType="com.donotlisten.record.dto.LearningStatisticsResponse">
+        SELECT
+            COALESCE(SUM(duration), 0) as totalListeningTime,
+            COALESCE(
+                SUM(CASE 
+                    WHEN understood_count > 0 THEN 1 
+                    ELSE 0 
+                END), 0
+            ) as totalUnderstood,
+            COALESCE(
+                SUM(CASE 
+                    WHEN familiar_count > 0 AND understood_count = 0 THEN 1 
+                    ELSE 0 
+                END), 0
+            ) as totalFamiliar,
+            COALESCE(
+                SUM(CASE 
+                    WHEN unfamiliar_count > 0 THEN 1 
+                    ELSE 0 
+                END), 0
+            ) as totalUnfamiliar
+        FROM user_listening_progress
+        WHERE user_id = #{userId}
+    </select>
+
+    <insert id="insertProgress">
+        INSERT INTO user_listening_progress (id, user_id, listening_id, duration, progress, understood_count, familiar_count, unfamiliar_count, last_position, created_at, updated_at)
+        VALUES (#{id}, #{userId}, #{listeningId}, #{duration}, #{progress}, #{understoodCount}, #{familiarCount}, #{unfamiliarCount}, #{lastPosition}, #{createdAt}, #{updatedAt})
+    </insert>
+
+    <update id="updateProgress">
+        UPDATE user_listening_progress
+        SET duration = #{duration},
+            progress = #{progress},
+            understood_count = #{understoodCount},
+            familiar_count = #{familiarCount},
+            unfamiliar_count = #{unfamiliarCount},
+            last_position = #{lastPosition},
+            updated_at = #{updatedAt}
+        WHERE user_id = #{userId} AND listening_id = #{listeningId}
+    </update>
+
+    <select id="findProgressByUserIdAndListeningId" resultMap="LearningRecordDetailResultMap">
+        SELECT
+            ulp.id,
+            ulp.listening_id,
+            lm.title,
+            ulp.duration,
+            ulp.progress,
+            ulp.understood_count,
+            ulp.familiar_count,
+            ulp.unfamiliar_count,
+            ulp.updated_at
+        FROM user_listening_progress ulp
+        INNER JOIN listening_materials lm ON ulp.listening_id = lm.id
+        WHERE ulp.user_id = #{userId} AND ulp.listening_id = #{listeningId}
+    </select>
+
+    <delete id="deleteByUserId">
+        DELETE FROM user_listening_progress
+        WHERE user_id = #{userId}
+    </delete>
+
+</mapper>

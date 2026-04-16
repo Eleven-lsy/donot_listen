@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.donotlisten.listening.mapper.TranscriptLineMapper">
+
+    <resultMap id="transcriptLineResultMap" type="com.donotlisten.listening.TranscriptLine">
+        <id property="id" column="id"/>
+        <result property="lineNumber" column="line_number"/>
+        <result property="speaker" column="speaker"/>
+        <result property="content" column="content"/>
+        <result property="startTime" column="start_time"/>
+        <result property="endTime" column="end_time"/>
+        <association property="listening" javaType="com.donotlisten.listening.ListeningMaterial">
+            <id property="id" column="listening_id"/>
+        </association>
+    </resultMap>
+
+    <select id="findByListeningIdOrderByLineNumberAsc" resultMap="transcriptLineResultMap">
+        select id, content, start_time, line_number, speaker, end_time, listening_id
+        from transcript_lines
+        where listening_id = #{listeningId}
+        order by line_number
+    </select>
+
+    <select id="countByListeningId" resultType="int">
+        select count(1)
+        from transcript_lines
+        where listening_id = #{listeningId}
+    </select>
+
+    <insert id="insert" parameterType="com.donotlisten.listening.TranscriptLine">
+        insert into transcript_lines (id, listening_id, line_number, speaker, start_time, end_time,content)
+        values (#{id}, #{listening.id}, #{lineNumber}, #{speaker}, #{startTime}, #{endTime},#{content} )
+    </insert>
+</mapper>
