@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.donotlisten.user.mapper.UserMapper">
+
+    <resultMap id="userResultMap" type="com.donotlisten.user.User">
+        <id property="id" column="id"/>
+        <result property="username" column="username"/>
+        <result property="email" column="email"/>
+        <result property="passwordHash" column="password_hash"/>
+        <result property="avatar" column="avatar"/>
+        <result property="level" column="level"/>
+        <result property="totalListening" column="total_listening"/>
+        <result property="masteredCount" column="mastered_count"/>
+        <result property="currentStreak" column="current_streak"/>
+        <result property="longestStreak" column="longest_streak"/>
+        <result property="joinDate" column="join_date"/>
+        <result property="lastActiveAt" column="last_active_at"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+    </resultMap>
+
+    <select id="existsByUsernameIgnoreCase" resultType="boolean">
+        select count(1) > 0
+        from users
+        where lower(username) = lower(#{username})
+    </select>
+
+    <select id="existsByEmailIgnoreCase" resultType="boolean">
+        select count(1) > 0
+        from users
+        where lower(email) = lower(#{email})
+    </select>
+
+    <select id="findByUsernameOrEmail" resultMap="userResultMap">
+        select *
+        from users
+        where lower(username) = lower(#{principal})
+           or lower(email) = lower(#{principal})
+        limit 1
+    </select>
+
+    <select id="findById" resultMap="userResultMap">
+        select *
+        from users
+        where id = #{id}
+    </select>
+
+    <insert id="insert" parameterType="com.donotlisten.user.User">
+        insert into users (
+            id, username, email, password_hash, avatar, level, total_listening, mastered_count,
+            current_streak, longest_streak, join_date, last_active_at, created_at, updated_at
+        ) values (
+            #{id}, #{username}, #{email}, #{passwordHash}, #{avatar}, #{level}, #{totalListening}, #{masteredCount},
+            #{currentStreak}, #{longestStreak}, #{joinDate}, #{lastActiveAt}, #{createdAt}, #{updatedAt}
+        )
+    </insert>
+
+    <update id="updateActivityAndStats" parameterType="com.donotlisten.user.User">
+        update users
+        set username = #{username},
+            email = #{email},
+            password_hash = #{passwordHash},
+            avatar = #{avatar},
+            level = #{level},
+            total_listening = #{totalListening},
+            mastered_count = #{masteredCount},
+            current_streak = #{currentStreak},
+            longest_streak = #{longestStreak},
+            join_date = #{joinDate},
+            last_active_at = #{lastActiveAt},
+            created_at = #{createdAt},
+            updated_at = #{updatedAt}
+        where id = #{id}
+    </update>
+</mapper>

@@ -1,0 +1,529 @@
+{
+  "project": "不听听力 - 四六级听力训练平台",
+  "version": "1.0.0",
+  "baseUrl": "http://localhost:8082",
+  "description": "纯到不能再纯的四六级听力训练平台 API 接口文档",
+  "updateDate": "2026-04-12",
+  "notes": "所有需要认证的接口请在请求头中携带 Authorization: Bearer <token>",
+  "api": [
+    {
+      "group": "认证相关",
+      "apis": [
+        {
+          "method": "POST",
+          "title": "用户登录",
+          "path": "/api/auth/login",
+          "description": "用户登录接口",
+          "auth": false,
+          "request": {
+            "headers": [
+              {"name": "Content-Type", "required": true, "description": "application/json"}
+            ],
+            "body": {
+              "type": "object",
+              "properties": {
+                "username": {"type": "string", "required": true, "description": "用户名或邮箱"},
+                "password": {"type": "string", "required": true, "description": "密码"}
+              },
+              "required": ["username", "password"]
+            }
+          },
+          "response": {
+            "success": {
+              "code": 0,
+              "data": {
+                "userId": 123,
+                "username": "testuser",
+                "email": "test@example.com",
+                "token": "eyJhbGci...",
+                "level": 4,
+                "totalListening": 0,
+                "masteredCount": 0
+              }
+            },
+            "error": {"code": -1, "msg": "用户名或密码错误"}
+          },
+          "example": {
+            "request": "{\"username\": \"testuser\", \"password\": \"123456\"}",
+            "response": "{\"code\": 0, \"msg\": \"登录成功\", \"data\": {...}}"
+          }
+        },
+        {
+          "method": "POST",
+          "title": "用户注册",
+          "path": "/api/auth/register",
+          "description": "新用户注册账号",
+          "auth": false,
+          "request": {
+            "headers": [
+              {"name": "Content-Type", "required": true, "description": "application/json"}
+            ],
+            "body": {
+              "type": "object",
+              "properties": {
+                "username": {"type": "string", "required": true, "description": "用户名（4-20位）"},
+                "email": {"type": "string", "required": true, "description": "邮箱地址"},
+                "password": {"type": "string", "required": true, "description": "密码（至少6位）"}
+              },
+              "required": ["username", "email", "password"]
+            }
+          },
+          "response": {
+            "success": {
+              "code": 0,
+              "data": {
+                "userId": 123,
+                "username": "newuser",
+                "email": "new@example.com",
+                "token": "eyJhbGci...",
+                "level": 4,
+                "totalListening": 0,
+                "masteredCount": 0
+              }
+            },
+            "error": {"code": -1, "msg": "用户名已存在"}
+          },
+          "example": {
+            "request": "{\"username\": \"newuser\", \"email\": \"new@example.com\", \"password\": \"123456\"}",
+            "response": "{\"code\": 0, \"msg\": \"注册成功\", \"data\": {...}}"
+          }
+        }
+      ]
+    },
+    {
+      "group": "导航相关",
+      "apis": [
+        {
+          "method": "GET",
+          "title": "获取导航数据",
+          "path": "/api/navigation",
+          "description": "获取首页侧边栏导航结构，包含年份/月份分组和专项训练入口",
+          "auth": false,
+          "request": {},
+          "response": {
+            "success": {
+              "code": 0,
+              "data": {
+                "years": [
+                  {
+                    "title": "2024年",
+                    "id": "year-2024",
+                    "months": [
+                      {
+                        "title": "6月",
+                        "cet4": [
+                          {"id": "set-4-1", "label": "第1套", "items": [
+                            {"id": "123", "label": "新闻报道", "type": "LECTURE", "year": 2024, "month": 6, "setNumber": 1, "level": 4},
+                            {"id": "124", "label": "对话", "type": "DIALOGUE", "year": 2024, "month": 6, "setNumber": 1, "level": 4},
+                            {"id": "125", "label": "短文", "type": "PASSAGE", "year": 2024, "month": 6, "setNumber": 1, "level": 4}
+                          ]}
+                        ],
+                        "cet6": []
+                      }
+                    ]
+                  }
+                ],
+                "special": [
+                  {
+                    "title": "专项训练",
+                    "id": "special-training",
+                    "items": [
+                      {"id": "123", "label": "新闻训练", "type": "LECTURE"},
+                      {"id": "124", "label": "对话训练", "type": "DIALOGUE"},
+                      {"id": "125", "label": "短文训练", "type": "PASSAGE"}
+                    ]
+                  }
+                ]
+              }
+            }
+          },
+          "remark": "返回结构化的导航树，用于渲染侧边栏"
+        }
+      ]
+    },
+    {
+      "group": "听力相关",
+      "apis": [
+        {
+          "method": "GET",
+          "title": "获取听力列表",
+          "path": "/api/listening/list",
+          "description": "获取听力材料列表，支持按年份、等级、类型筛选",
+          "auth": false,
+          "request": {
+            "query": [
+              {"name": "year", "type": "number", "required": false, "description": "年份"},
+              {"name": "level", "type": "number", "required": false, "description": "等级：4（四级）、6（六级）"},
+              {"name": "type", "type": "string", "required": false, "description": "类型：LECTURE（新闻）、DIALOGUE（对话）、PASSAGE（短文）"},
+              {"name": "page", "type": "number", "required": false, "default": 1, "description": "页码"},
+              {"name": "pageSize", "type": "number", "required": false, "default": 20, "description": "每页数量"}
+            ]
+          },
+          "response": {
+            "success": {
+              "code": 0,
+              "data": {
+                "total": 120,
+                "list": [
+                  {
+                    "id": "123",
+                    "title": "2024年6月英语四级听力 - 新闻报道1",
+                    "year": 2024,
+                    "month": 6,
+                    "level": 4,
+                    "type": "LECTURE",
+                    "duration": 180,
+                    "audioUrl": "/audio/test.mp3",
+                    "isCollected": false
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "method": "GET",
+          "title": "获取听力详情",
+          "path": "/api/listening/detail/{id}",
+          "description": "获取单个听力材料的详细信息",
+          "auth": false,
+          "request": {
+            "params": [
+              {"name": "id", "type": "string", "required": true, "description": "听力ID"}
+            ]
+          },
+          "response": {
+            "success": {
+              "code": 0,
+              "data": {
+                "id": "123",
+                "title": "2024年6月英语四级听力 - 新闻报道1",
+                "year": 2024,
+                "month": 6,
+                "level": 4,
+                "type": "LECTURE",
+                "duration": 180,
+                "audioUrl": "/audio/test.mp3",
+                "isCollected": false,
+                "setNumber": 1
+              }
+            }
+          }
+        },
+        {
+          "method": "GET",
+          "title": "获取听力原文",
+          "path": "/api/listening/transcript/{id}",
+          "description": "获取听力的完整逐句原文",
+          "auth": false,
+          "request": {
+            "params": [
+              {"name": "id", "type": "string", "required": true, "description": "听力ID"}
+            ]
+          },
+          "response": {
+            "success": {
+              "code": 0,
+              "data": {
+                "listeningId": "123",
+                "lines": [
+                  {
+                    "id": "1",
+                    "number": 1,
+                    "speaker": "W",
+                    "text": "Good morning, this is the reception desk. How can I help you?",
+                    "startTime": 0.0,
+                    "endTime": 5.0
+                  },
+                  {
+                    "id": "2",
+                    "number": 2,
+                    "speaker": "M",
+                    "text": "Hi, I'm calling about the conference room booking for tomorrow.",
+                    "startTime": 5.0,
+                    "endTime": 10.0
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "method": "GET",
+          "title": "获取整套听力",
+          "path": "/api/listening/set",
+          "description": "获取某年某月某套的所有听力题目",
+          "auth": false,
+          "request": {
+            "query": [
+              {"name": "year", "type": "number", "required": true, "description": "年份"},
+              {"name": "month", "type": "number", "required": true, "description": "月份"},
+              {"name": "level", "type": "number", "required": true, "description": "等级：4、6"},
+              {"name": "setNumber", "type": "number", "required": true, "description": "套号"},
+              {"name": "type", "type": "string", "required": false, "description": "类型筛选：LECTURE、DIALOGUE、PASSAGE"}
+            ]
+          },
+          "response": {
+            "success": {
+              "code": 0,
+              "data": [
+                {"id": "123", "title": "新闻报道1", "type": "LECTURE", "level": 4, "year": 2024, "month": 6, "setNumber": 1},
+                {"id": "124", "title": "对话1", "type": "DIALOGUE", "level": 4, "year": 2024, "month": 6, "setNumber": 1},
+                {"id": "125", "title": "短文1", "type": "PASSAGE", "level": 4, "year": 2024, "month": 6, "setNumber": 1}
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "group": "AI 智能讲解",
+      "apis": [
+        {
+          "method": "GET",
+          "title": "AI 句子解析",
+          "path": "/api/ai/explain",
+          "description": "使用 AI 解析指定的听力句子，返回翻译和考点分析",
+          "auth": false,
+          "request": {
+            "query": [
+              {"name": "lineId", "type": "string", "required": true, "description": "原文行ID"}
+            ]
+          },
+          "response": {
+            "success": {
+              "code": 0,
+              "data": "【翻译】早上好，这里是前台。有什么可以帮助您的？\n\n【难点解析】这句话的难点在于 \"reception desk\" 这个固定搭配，意思是前台/接待处。连读现象：'is the' 可发生辅元连读。"
+            }
+          },
+          "remark": "AI 会分析连读、失爆、弱读、生词等难点，并给出翻译"
+        }
+      ]
+    },
+    {
+      "group": "学习记录",
+      "apis": [
+        {
+          "method": "GET",
+          "title": "获取学习记录",
+          "path": "/api/user/learning-records",
+          "description": "获取当前用户的学习记录统计",
+          "auth": true,
+          "request": {
+            "headers": [
+              {"name": "Authorization", "type": "string", "required": true, "description": "Bearer token"}
+            ],
+            "query": [
+              {"name": "page", "type": "number", "required": false, "default": 1, "description": "页码"},
+              {"name": "pageSize", "type": "number", "required": false, "default": 20, "description": "每页数量"}
+            ]
+          },
+          "response": {
+            "success": {
+              "code": 0,
+              "data": {
+                "total": 45,
+                "statistics": {
+                  "totalListeningTime": 15230,
+                  "totalUnderstood": 320,
+                  "totalFamiliar": 180,
+                  "totalUnfamiliar": 65
+                },
+                "records": [
+                  {
+                    "id": "record_001",
+                    "listeningId": "123",
+                    "listeningTitle": "2024年6月英语四级听力",
+                    "duration": 180,
+                    "lastPractice": "2024-06-15T14:30:00Z"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "method": "POST",
+          "title": "提交学习反馈",
+          "path": "/api/listening/feedback",
+          "description": "提交用户对听力的学习反馈（听懂/熟悉/陌生）",
+          "auth": true,
+          "request": {
+            "headers": [
+              {"name": "Authorization", "type": "string", "required": true, "description": "Bearer token"},
+              {"name": "Content-Type", "type": "string", "required": true, "description": "application/json"}
+            ],
+            "body": {
+              "type": "object",
+              "properties": {
+                "listeningId": {"type": "string", "required": true, "description": "听力ID"},
+                "lineNumber": {"type": "number", "required": true, "description": "原文行号"},
+                "status": {"type": "string", "required": true, "description": "掌握状态：UNDERSTOOD（听懂）、FAMILIAR（熟悉）、UNFAMILIAR（陌生）"}
+              },
+              "required": ["listeningId", "lineNumber", "status"]
+            }
+          },
+          "response": {
+            "success": {"code": 0, "msg": "反馈提交成功", "data": null},
+            "error": {"code": -1, "msg": "提交失败"}
+          }
+        },
+        {
+          "method": "DELETE",
+          "title": "清空学习记录",
+          "path": "/api/user/learning-records",
+          "description": "清空当前用户的所有学习记录",
+          "auth": true,
+          "request": {
+            "headers": [
+              {"name": "Authorization", "type": "string", "required": true, "description": "Bearer token"}
+            ]
+          },
+          "response": {
+            "success": {"code": 0, "msg": "学习记录已清空", "data": null}
+          },
+          "remark": "⚠️ 此操作不可逆，请谨慎使用"
+        }
+      ]
+    },
+    {
+      "group": "收藏管理",
+      "apis": [
+        {
+          "method": "GET",
+          "title": "获取收藏列表",
+          "path": "/api/user/collections",
+          "description": "获取当前用户收藏的听力列表",
+          "auth": true,
+          "request": {
+            "headers": [
+              {"name": "Authorization", "type": "string", "required": true, "description": "Bearer token"}
+            ],
+            "query": [
+              {"name": "page", "type": "number", "required": false, "default": 1, "description": "页码"},
+              {"name": "pageSize", "type": "number", "required": false, "default": 20, "description": "每页数量"}
+            ]
+          },
+          "response": {
+            "success": {
+              "code": 0,
+              "data": {
+                "total": 12,
+                "list": [
+                  {
+                    "id": 1,
+                    "listeningId": "123",
+                    "listeningTitle": "2024年6月英语四级听力",
+                    "level": 4,
+                    "type": "LECTURE",
+                    "collectedAt": "2024-06-10T09:00:00Z"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "method": "POST",
+          "title": "添加收藏",
+          "path": "/api/user/collections",
+          "description": "收藏指定的听力材料",
+          "auth": true,
+          "request": {
+            "headers": [
+              {"name": "Authorization", "type": "string", "required": true, "description": "Bearer token"},
+              {"name": "Content-Type", "type": "string", "required": true, "description": "application/json"}
+            ],
+            "body": {
+              "type": "object",
+              "properties": {
+                "listeningId": {"type": "string", "required": true, "description": "听力ID"}
+              },
+              "required": ["listeningId"]
+            }
+          },
+          "response": {
+            "success": {"code": 0, "msg": "收藏成功", "data": {"listeningId": "123"}}
+          }
+        },
+        {
+          "method": "DELETE",
+          "title": "取消收藏",
+          "path": "/api/user/collections/{listeningId}",
+          "description": "取消收藏指定的听力材料",
+          "auth": true,
+          "request": {
+            "headers": [
+              {"name": "Authorization", "type": "string", "required": true, "description": "Bearer token"}
+            ],
+            "params": [
+              {"name": "listeningId", "type": "string", "required": true, "description": "听力ID"}
+            ]
+          },
+          "response": {
+            "success": {"code": 0, "msg": "取消收藏成功", "data": null}
+          }
+        }
+      ]
+    },
+    {
+      "group": "用户信息",
+      "apis": [
+        {
+          "method": "GET",
+          "title": "获取用户资料",
+          "path": "/api/user/profile",
+          "description": "获取当前登录用户的详细信息",
+          "auth": true,
+          "request": {
+            "headers": [
+              {"name": "Authorization", "type": "string", "required": true, "description": "Bearer token"}
+            ]
+          },
+          "response": {
+            "success": {
+              "code": 0,
+              "data": {
+                "userId": 123,
+                "username": "testuser",
+                "email": "test@example.com",
+                "level": 4,
+                "totalListening": 156,
+                "masteredCount": 89,
+                "joinDate": "2024-01-15T10:00:00Z"
+              }
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "enums": {
+    "ListeningType": {
+      "LECTURE": "新闻报道",
+      "DIALOGUE": "对话",
+      "PASSAGE": "短文"
+    },
+    "FeedbackStatus": {
+      "UNDERSTOOD": "听懂",
+      "FAMILIAR": "熟悉",
+      "UNFAMILIAR": "陌生"
+    },
+    "Level": {
+      "4": "四级",
+      "6": "六级"
+    }
+  },
+  "commonResponse": {
+    "success": {
+      "code": 0,
+      "msg": "success",
+      "data": {}
+    },
+    "error": {
+      "code": -1,
+      "msg": "错误信息",
+      "data": null
+    }
+  }
+}

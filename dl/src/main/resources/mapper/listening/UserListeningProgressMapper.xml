@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.donotlisten.listening.mapper.UserListeningProgressMapper">
+
+    <resultMap id="userListeningProgressResultMap" type="com.donotlisten.listening.UserListeningProgress">
+        <id property="id" column="id"/>
+        <result property="duration" column="duration"/>
+        <result property="progress" column="progress"/>
+        <result property="understoodCount" column="understood_count"/>
+        <result property="familiarCount" column="familiar_count"/>
+        <result property="unfamiliarCount" column="unfamiliar_count"/>
+        <result property="lastPosition" column="last_position"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+        <association property="user" javaType="com.donotlisten.user.User">
+            <id property="id" column="user_id"/>
+        </association>
+        <association property="listening" javaType="com.donotlisten.listening.ListeningMaterial">
+            <id property="id" column="listening_id"/>
+        </association>
+    </resultMap>
+
+    <select id="findByUserId" resultMap="userListeningProgressResultMap">
+        select id, user_id, listening_id, duration, progress, understood_count, familiar_count,
+               unfamiliar_count, last_position, created_at, updated_at
+        from user_listening_progress
+        where user_id = #{userId}
+    </select>
+
+    <select id="findByUserIdAndListeningId" resultMap="userListeningProgressResultMap">
+        select id, user_id, listening_id, duration, progress, understood_count, familiar_count,
+               unfamiliar_count, last_position, created_at, updated_at
+        from user_listening_progress
+        where user_id = #{userId}
+          and listening_id = #{listeningId}
+    </select>
+
+    <insert id="insert" parameterType="com.donotlisten.listening.UserListeningProgress">
+        insert into user_listening_progress (
+            id, user_id, listening_id, duration, progress, understood_count,
+            familiar_count, unfamiliar_count, last_position, created_at, updated_at
+        ) values (
+            #{id}, #{user.id}, #{listening.id}, #{duration}, #{progress}, #{understoodCount},
+            #{familiarCount}, #{unfamiliarCount}, #{lastPosition}, #{createdAt}, #{updatedAt}
+        )
+    </insert>
+
+    <update id="update" parameterType="com.donotlisten.listening.UserListeningProgress">
+        update user_listening_progress
+        set duration = #{duration},
+            progress = #{progress},
+            understood_count = #{understoodCount},
+            familiar_count = #{familiarCount},
+            unfamiliar_count = #{unfamiliarCount},
+            last_position = #{lastPosition},
+            updated_at = #{updatedAt}
+        where id = #{id}
+    </update>
+</mapper>

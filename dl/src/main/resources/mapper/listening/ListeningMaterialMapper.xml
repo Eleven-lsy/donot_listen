@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.donotlisten.listening.mapper.ListeningMaterialMapper">
+
+    <resultMap id="listeningMaterialResultMap" type="com.donotlisten.listening.ListeningMaterial">
+        <id property="id" column="id"/>
+        <result property="title" column="title"/>
+        <result property="year" column="material_year"/>
+        <result property="month" column="material_month"/>
+        <result property="setNumber" column="set_number"/>
+        <result property="level" column="level"/>
+        <result property="type" column="type" javaType="com.donotlisten.listening.ListeningType"/>
+        <result property="duration" column="duration"/>
+        <result property="difficulty" column="difficulty"/>
+        <result property="coverImage" column="cover_image"/>
+        <result property="audioUrl" column="audio_url"/>
+        <result property="playCount" column="play_count"/>
+        <result property="masteredRate" column="mastered_rate"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+    </resultMap>
+
+    <select id="findById" resultMap="listeningMaterialResultMap">
+        select * from listening_materials where id = #{id}
+    </select>
+
+    <resultMap id="listeningItemResultMap" type="com.donotlisten.listening.dto.ListeningListResponse$ListeningItem">
+        <id property="id" column="id"/>
+        <result property="title" column="title"/>
+        <result property="year" column="material_year"/>
+        <result property="month" column="material_month"/>
+        <result property="setNumber" column="set_number"/>
+        <result property="level" column="level"/>
+        <result property="type" column="type"/>
+        <result property="duration" column="duration"/>
+        <result property="difficulty" column="difficulty"/>
+        <result property="coverImage" column="cover_image"/>
+        <result property="audioUrl" column="audio_url"/>
+        <result property="playCount" column="play_count"/>
+        <result property="masteredRate" column="mastered_rate"/>
+        <result property="isCollected" column="is_collected"/>
+    </resultMap>
+
+    <select id="findListPageable" resultMap="listeningItemResultMap">
+        SELECT lm.id, lm.title, lm.material_year, lm.material_month, lm.set_number, lm.level, lm.type,
+               lm.duration, lm.difficulty, lm.cover_image, lm.audio_url, lm.play_count,
+               lm.mastered_rate, CASE WHEN uc.id IS NOT NULL THEN TRUE ELSE FALSE END as is_collected
+        FROM listening_materials lm
+        LEFT JOIN user_collections uc ON lm.id = uc.listening_id AND uc.user_id = #{userId}
+        <where>
+            <if test="year != null">AND lm.material_year = #{year}</if>
+            <if test="level != null">AND lm.level = #{level}</if>
+            <if test="type != null and type != ''">AND lm.type = #{type}</if>
+        </where>
+        ORDER BY lm.material_year DESC, lm.material_month DESC, lm.set_number ASC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <select id="countListPageable" resultType="long">
+        SELECT COUNT(*) FROM listening_materials lm
+        <where>
+            <if test="year != null">AND lm.material_year = #{year}</if>
+            <if test="level != null">AND lm.level = #{level}</if>
+            <if test="type != null and type != ''">AND lm.type = #{type}</if>
+        </where>
+    </select>
+
+    <select id="findAllGrouped" resultMap="listeningItemResultMap">
+        SELECT lm.id, lm.title, lm.material_year, lm.material_month, lm.set_number, lm.level, lm.type,
+               lm.duration, lm.difficulty, lm.cover_image, lm.audio_url, lm.play_count, lm.mastered_rate, FALSE as is_collected
+        FROM listening_materials lm
+        ORDER BY lm.material_year DESC, lm.material_month DESC, lm.set_number ASC, lm.type ASC
+    </select>
+
+    <select id="findByYearMonthLevelAndSetNumber" resultMap="listeningItemResultMap">
+        SELECT lm.id, lm.title, lm.material_year, lm.material_month, lm.set_number, lm.level, lm.type,
+               lm.duration, lm.difficulty, lm.cover_image, lm.audio_url, lm.play_count, lm.mastered_rate, FALSE as is_collected
+        FROM listening_materials lm
+        WHERE lm.material_year = #{year}
+          <if test="month != null">
+            AND lm.material_month = #{month}
+          </if>
+          AND lm.level = #{level}
+          AND lm.set_number = #{setNumber}
+        ORDER BY FIELD(lm.type, 'LECTURE', 'DIALOGUE', 'PASSAGE'), lm.id ASC
+    </select>
+
+    <select id="findByYearMonthLevelSetNumberAndType" resultMap="listeningItemResultMap">
+        SELECT lm.id, lm.title, lm.material_year, lm.material_month, lm.set_number, lm.level, lm.type,
+               lm.duration, lm.difficulty, lm.cover_image, lm.audio_url, lm.play_count, lm.mastered_rate, FALSE as is_collected
+        FROM listening_materials lm
+        WHERE 1=1
+          <if test="year != null">
+            AND lm.material_year = #{year}
+          </if>
+          <if test="month != null">
+            AND lm.material_month = #{month}
+          </if>
+          <if test="level != null">
+            AND lm.level = #{level}
+          </if>
+          <if test="setNumber != null">
+            AND lm.set_number = #{setNumber}
+          </if>
+          <if test="type != null and type != ''">
+            AND lm.type = #{type}
+          </if>
+        ORDER BY lm.material_year DESC, lm.material_month DESC, FIELD(lm.type, 'LECTURE', 'DIALOGUE', 'PASSAGE'), lm.id ASC
+    </select>
+
+    <insert id="insert" parameterType="com.donotlisten.listening.ListeningMaterial">
+        insert into listening_materials (id, title, material_year, material_month, set_number, level, type, duration, difficulty, cover_image, audio_url, play_count, mastered_rate, created_at, updated_at)
+        values (#{id}, #{title}, #{year}, #{month}, #{setNumber}, #{level}, #{type}, #{duration}, #{difficulty}, #{coverImage}, #{audioUrl}, #{playCount}, #{masteredRate}, #{createdAt}, #{updatedAt})
+    </insert>
+
+    <update id="update" parameterType="com.donotlisten.listening.ListeningMaterial">
+        update listening_materials
+        set title = #{title}, material_year = #{year}, material_month = #{month}, set_number = #{setNumber}, level = #{level}, type = #{type}, duration = #{duration}, difficulty = #{difficulty}, cover_image = #{coverImage}, audio_url = #{audioUrl}, play_count = #{playCount}, mastered_rate = #{masteredRate}, created_at = #{createdAt}, updated_at = #{updatedAt}
+        where id = #{id}
+    </update>
+</mapper>

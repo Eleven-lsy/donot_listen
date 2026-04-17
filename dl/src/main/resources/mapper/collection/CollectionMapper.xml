@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.donotlisten.collection.mapper.CollectionMapper">
+
+    <resultMap id="CollectionWithMaterialResultMap" type="com.donotlisten.collection.dto.CollectionWithMaterial">
+        <id property="id" column="id"/>
+        <result property="userId" column="user_id"/>
+        <result property="listeningId" column="listening_id"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="listeningTitle" column="title"/>
+        <result property="coverImage" column="cover_image"/>
+        <result property="level" column="level"/>
+        <result property="duration" column="duration"/>
+    </resultMap>
+
+    <select id="findByUserIdPageable" resultMap="CollectionWithMaterialResultMap">
+        SELECT
+            uc.id,
+            uc.user_id,
+            uc.listening_id,
+            uc.created_at,
+            lm.title,
+            lm.cover_image,
+            lm.level,
+            lm.duration
+        FROM user_collections uc
+        INNER JOIN listening_materials lm ON uc.listening_id = lm.id
+        WHERE uc.user_id = #{userId}
+        ORDER BY uc.created_at DESC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <select id="countByUserId" resultType="long">
+        SELECT COUNT(*)
+        FROM user_collections
+        WHERE user_id = #{userId}
+    </select>
+
+    <select id="existsByUserIdAndListeningId" resultType="boolean">
+        SELECT COUNT(*) > 0
+        FROM user_collections
+        WHERE user_id = #{userId} AND listening_id = #{listeningId}
+    </select>
+
+    <select id="findByUserIdAndListeningId" resultMap="CollectionWithMaterialResultMap">
+        SELECT
+            uc.id,
+            uc.user_id,
+            uc.listening_id,
+            uc.created_at,
+            lm.title,
+            lm.cover_image,
+            lm.level,
+            lm.duration
+        FROM user_collections uc
+        INNER JOIN listening_materials lm ON uc.listening_id = lm.id
+        WHERE uc.user_id = #{userId} AND uc.listening_id = #{listeningId}
+    </select>
+
+    <insert id="insert">
+        INSERT INTO user_collections (id, user_id, listening_id, created_at)
+        VALUES (#{id}, #{userId}, #{listeningId}, #{createdAt})
+    </insert>
+
+    <delete id="deleteByUserIdAndListeningId">
+        DELETE FROM user_collections
+        WHERE user_id = #{userId} AND listening_id = #{listeningId}
+    </delete>
+
+</mapper>

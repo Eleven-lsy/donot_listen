@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.donotlisten.listening.mapper.ListeningFeedbackMapper">
+
+    <resultMap id="listeningFeedbackResultMap" type="com.donotlisten.listening.ListeningFeedback">
+        <id property="id" column="id"/>
+        <result property="lineNumber" column="line_number"/>
+        <result property="status" column="status" javaType="com.donotlisten.listening.FeedbackStatus"/>
+        <result property="updatedAt" column="updated_at"/>
+        <association property="user" javaType="com.donotlisten.user.User">
+            <id property="id" column="user_id"/>
+        </association>
+        <association property="listening" javaType="com.donotlisten.listening.ListeningMaterial">
+            <id property="id" column="listening_id"/>
+        </association>
+    </resultMap>
+
+    <select id="findByUserIdAndListeningId" resultMap="listeningFeedbackResultMap">
+        select id, user_id, listening_id, line_number, status, updated_at
+        from listening_feedback
+        where user_id = #{userId}
+          and listening_id = #{listeningId}
+        order by line_number asc
+    </select>
+
+    <select id="findByUserIdAndListeningIdAndLineNumber" resultMap="listeningFeedbackResultMap">
+        select id, user_id, listening_id, line_number, status, updated_at
+        from listening_feedback
+        where user_id = #{userId}
+          and listening_id = #{listeningId}
+          and line_number = #{lineNumber}
+    </select>
+
+    <insert id="insert" parameterType="com.donotlisten.listening.ListeningFeedback">
+        insert into listening_feedback (id, user_id, listening_id, line_number, status, updated_at)
+        values (#{id}, #{user.id}, #{listening.id}, #{lineNumber}, #{status}, #{updatedAt})
+    </insert>
+
+    <update id="update" parameterType="com.donotlisten.listening.ListeningFeedback">
+        update listening_feedback
+        set status = #{status},
+            updated_at = #{updatedAt}
+        where id = #{id}
+    </update>
+</mapper>
